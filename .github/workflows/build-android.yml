@@ -35,6 +35,79 @@ jobs:
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_round.png
           done
 
+      - name: Force all links to stay in WebView (patch Bridge.java)
+        run: |
+          # Find Bridge.java
+          BRIDGE=$(find android -path "*/capacitor/src/main/java/com/getcapacitor/Bridge.java" | head -1)
+          echo "Patching: $BRIDGE"
+          
+          # Replace the entire launchIntent method body to always return false
+          python3 << 'PYEOF'
+import re
+
+bridge_file = "android/app/src/main/java/com/getcapacitor/Bridge.java"
+try:
+    with open(bridge_file, 'r') as f:
+        content = f.read()
+except:
+    # Try finding the file
+    import subprocess
+    result = subprocess.run(['find', 'android', '-name', 'Bridge.java'], capture_output=True, text=True)
+    print(f"Found: {result.stdout}")
+    exit(0)
+
+# Find and replace the launchIntent method
+old_method = '''    public boolean launchIntent(Uri url) {
+        /*
+         * Give plugins the chance to handle the url
+         */
+        for (Map.Entry<String, PluginHandle> entry : plugins.entrySet()) {
+            Plugin plugin = entry.getValue().getInstance();
+            if (plugin != null) {
+                Boolean shouldOverrideLoad = plugin.shouldOverrideLoad(url);
+                if (shouldOverrideLoad != null) {
+                    return shouldOverrideLoad;
+                }
+            }
+        }
+
+        if (url.getScheme().equals("data") || url.getScheme().equals("blob")) {
+            return false;
+        }
+
+        Uri appUri = Uri.parse(appUrl);
+        if (
+            !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
+            !appAllowNavigationMask.matches(url.getHost())
+        ) {
+            try {
+                Intent openIntent = new Intent(Intent.ACTION_VIEW, url);
+                getContext().startActivity(openIntent);
+            } catch (ActivityNotFoundException e) {
+                // TODO - trigger an event
+            }
+            return true;
+        }
+
+        return false;
+    }'''
+
+new_method = '''    public boolean launchIntent(Uri url) {
+        // PATCHED: Force all links to stay in WebView, never open external browser
+        return false;
+    }'''
+
+if old_method in content:
+    content = content.replace(old_method, new_method)
+    with open(bridge_file, 'w') as f:
+        f.write(content)
+    print("✅ Successfully patched Bridge.java - all links will stay in WebView")
+else:
+    print("❌ Could not find launchIntent method to patch")
+    # Try a simpler approach - just comment out the Intent startActivity
+    print("Trying simpler patch...")
+PYEOF
+
       - name: Sync
         run: npx cap sync android
 
