@@ -29,7 +29,11 @@ jobs:
 
       - name: Replace icons with cat icon
         run: |
-          # Copy cat icon to all mipmap directories
+          # Copy cat icon to all mipmap directories as foreground
+          for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_foreground.png
+          done
+          # Also replace the base icons
           for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher.png
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_round.png
