@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="大牛の家">
+<link rel="preload" href="/icon-512.png" as="image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>大牛の家</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.container {
+  max-width: 500px;
+  width: 90%;
+  padding: 40px 30px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+}
+h1 {
+  font-size: 2.2em;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.subtitle { color: #888; margin-bottom: 30px; font-size: 0.95em; }
+.links { display: flex; flex-direction: column; gap: 14px; }
+a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: #f8f9fa;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.3s;
+  border-left: 4px solid #667eea;
+}
+a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(102,126,234,0.2);
+  background: #fff;
+}
+a .icon { font-size: 1.6em; }
+a .info { text-align: left; flex: 1; }
+a .name { font-weight: 600; font-size: 1.05em; }
+a .desc { font-size: 0.85em; color: #888; margin-top: 3px; }
+a .tag {
+  font-size: 0.75em;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 500;
+}
+a .tag.lock {
+  background: #fff3e0;
+  color: #e65100;
+}
+.footer {
+  margin-top: 30px;
+  font-size: 0.8em;
+  color: #bbb;
+}
+</style>
+</head>
+<body>
+<div id="splash" style="position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease-out">
+  <img src="/icon-512.png" style="width:100px;height:100px;border-radius:24px;animation:pulse 1.5s ease-in-out infinite" alt="">
+  <div style="margin-top:16px;color:#ccc;font-size:12px;letter-spacing:2px">加载中</div>
+</div>
+<style>@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}</style>
+<div class="container">
+  <h1>🐾 大牛の家</h1>
+  <p class="subtitle">Family Health & Records Portal</p>
+
+  <div class="links">
+    <a href="https://hzq.daniu.win">
+      <span class="icon">👴</span>
+      <div class="info">
+        <div class="name">外公健康档案</div>
+        <div class="desc">洪子勤 · 肾功能/糖尿病/血压监测</div>
+      </div>
+      <span class="tag lock">🔒 登录</span>
+    </a>
+
+    <a href="https://grandma.daniu.win">
+      <span class="icon">👵</span>
+      <div class="info">
+        <div class="name">爷爷奶奶</div>
+        <div class="desc">健康记录与护理</div>
+      </div>
+      <span class="tag lock">🔒 登录</span>
+    </a>
+
+    <a href="https://daddy.daniu.win">
+      <span class="icon">👨</span>
+      <div class="info">
+        <div class="name">爸爸体检报告</div>
+        <div class="desc">体检数据分析与趋势追踪</div>
+      </div>
+      <span class="tag lock">🔒 登录</span>
+    </a>
+
+    <a href="https://cats.daniu.win">
+      <span class="icon">🐱</span>
+      <div class="info">
+        <div class="name">大牛小斑记录</div>
+        <div class="desc">成长日记 · 竹子数据</div>
+      </div>
+      <span class="tag">公开</span>
+    </a>
+
+    <a href="https://coupon.daniu.win">
+      <span class="icon">🎫</span>
+      <div class="info">
+        <div class="name">团购券管理</div>
+        <div class="desc">优惠券 · 团购 · 到期提醒</div>
+      </div>
+      <span class="tag">公开</span>
+    </a>
+
+    <a href="https://movies.daniu.win">
+      <span class="icon">🎬</span>
+      <div class="info">
+        <div class="name">电影演出</div>
+        <div class="desc">近期上映 · 已购票标记</div>
+      </div>
+      <span class="tag">公开</span>
+    </a>
+  </div>
+
+  <div class="footer">daniu.win · Family Portal · 2026</div>
+</div>
+<script>
+function hideSplash(){
+  var s=document.getElementById('splash');
+  if(!s)return;
+  s.style.opacity='0';
+  setTimeout(function(){s.remove()},600);
+}
+if(document.readyState==='complete'){hideSplash();}
+else{window.addEventListener('load',function(){setTimeout(hideSplash,200)});}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

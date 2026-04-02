@@ -1,0 +1,11 @@
+{
+  "appId": "com.daniu.home",
+  "appName": "大牛の家",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
