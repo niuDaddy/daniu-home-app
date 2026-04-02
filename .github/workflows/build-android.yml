@@ -22,22 +22,16 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
-      - name: Install deps
-        run: npm install
-
-      - name: Init Capacitor Android
+      - name: Install
         run: |
-          npx @capacitor/cli add android || true
-          ls -la android/ 2>/dev/null || echo "No android dir"
+          npm install
+          npx cap add android
 
       - name: Sync
-        run: npx @capacitor/cli sync android
+        run: npx cap sync android
 
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Build
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
