@@ -148,6 +148,16 @@ a .tag.lock {
   <div class="footer">daniu.win · Family Portal · 2026</div>
 </div>
 <script>
+// Intercept all link clicks and use window.location instead of native navigation
+// This keeps navigation within the Capacitor WebView
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('a');
+  if (!link) return;
+  var href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+  e.preventDefault();
+  window.location.href = href;
+}, false);
 function hideSplash(){
   var s=document.getElementById('splash');
   if(!s)return;
