@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@capacitor/android": "^8.3.0",
-    "@capacitor/cli": "^8.3.0",
-    "@capacitor/core": "^8.3.0"
+    "@capacitor/android": "^7.6.1",
+    "@capacitor/cli": "^7.6.1",
+    "@capacitor/core": "^7.6.1"
   }
 }
