@@ -6,7 +6,17 @@
     "androidScheme": "https"
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": true,
+    "allowNavigation": [
+      "https://hzq.daniu.win",
+      "https://grandma.daniu.win",
+      "https://daddy.daniu.win",
+      "https://cats.daniu.win",
+      "https://coupon.daniu.win",
+      "https://movies.daniu.win",
+      "https://daniu.win",
+      "https://www.daniu.win"
+    ]
   },
   "plugins": {
     "SplashScreen": {
