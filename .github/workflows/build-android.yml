@@ -29,15 +29,19 @@ jobs:
 
       - name: Replace icons with cat icon
         run: |
-          # Copy cat icon to all mipmap directories as foreground
           for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_foreground.png
-          done
-          # Also replace the base icons
-          for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher.png
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_round.png
           done
+
+      - name: Configure allowNavigation in AndroidManifest
+        run: |
+          # Add allowNavigation to prevent Chrome from opening internal links
+          sed -i 's|<application|<application\n        android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
+          # Ensure external links open in webview
+          grep -q "android:allowNavigation" android/app/src/main/AndroidManifest.xml || \
+          sed -i 's|</application>|    <meta-data android:name="android.webkit.WebView.EnableSlowPath" android:value="false" />\n</application>|' android/app/src/main/AndroidManifest.xml
 
       - name: Sync
         run: npx cap sync android
