@@ -35,28 +35,6 @@ jobs:
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_round.png
           done
 
-      - name: Patch MainActivity to keep all links in WebView
-        run: |
-          # Find MainActivity.java
-          MAINACTIVITY=$(find android -name "MainActivity.java" | head -1)
-          if [ -z "$MAINACTIVITY" ]; then
-            MAINACTIVITY=$(find android -name "MainActivity.kt" | head -1)
-          fi
-          echo "Found: $MAINACTIVITY"
-          
-          # Patch Java version
-          if [ "$(basename $MAINACTIVITY)" = "MainActivity.java" ]; then
-            # Add shouldOverrideUrlLoading override
-            if ! grep -q "shouldOverrideUrlLoading" "$MAINACTIVITY"; then
-              sed -i 's/public class MainActivity extends PlatformActivity {/public class MainActivity extends PlatformActivity {\n    @Override\n    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {\n        return false;\n    }/' "$MAINACTIVITY"
-            fi
-          fi
-
-      - name: Configure AndroidManifest
-        run: |
-          # Enable cleartext and intent handling
-          sed -i 's|android:allowBackup="true"|android:allowBackup="true" android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
-
       - name: Sync
         run: npx cap sync android
 
