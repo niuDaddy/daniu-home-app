@@ -4,14 +4,15 @@
   "webDir": "www",
   "server": {
     "androidScheme": "https",
+    "hostname": "daniu.win",
     "allowNavigation": [
+      "https://daniu.win",
       "https://hzq.daniu.win",
       "https://grandma.daniu.win",
       "https://daddy.daniu.win",
       "https://cats.daniu.win",
       "https://coupon.daniu.win",
       "https://movies.daniu.win",
-      "https://daniu.win",
       "https://www.daniu.win"
     ]
   },
