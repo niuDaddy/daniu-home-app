@@ -24,15 +24,76 @@ jobs:
 
       - name: Install
         run: |
-          npm ci
+          npm install
           npx cap add android
+
+      - name: Patch Capacitor Bridge to keep all links in WebView
+        run: |
+          python3 << 'PYEOF'
+          import os
+
+          bridge_path = "node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/Bridge.java"
+          print(f"Patching: {bridge_path}")
+
+          with open(bridge_path, 'r') as f:
+              content = f.read()
+
+          old = '''    public boolean launchIntent(Uri url) {
+              /*
+               * Give plugins the chance to handle the url
+               */
+              for (Map.Entry<String, PluginHandle> entry : plugins.entrySet()) {
+                  Plugin plugin = entry.getValue().getInstance();
+                  if (plugin != null) {
+                      Boolean shouldOverrideLoad = plugin.shouldOverrideLoad(url);
+                      if (shouldOverrideLoad != null) {
+                          return shouldOverrideLoad;
+                      }
+                  }
+              }
+
+              if (url.getScheme().equals("data") || url.getScheme().equals("blob")) {
+                  return false;
+              }
+
+              Uri appUri = Uri.parse(appUrl);
+              if (
+                  !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
+                  !appAllowNavigationMask.matches(url.getHost())
+              ) {
+                  try {
+                      Intent openIntent = new Intent(Intent.ACTION_VIEW, url);
+                      getContext().startActivity(openIntent);
+                  } catch (ActivityNotFoundException e) {
+                      // TODO - trigger an event
+                  }
+                  return true;
+              }
+
+              return false;
+          }'''
+
+          new = '''    public boolean launchIntent(Uri url) {
+              // PATCHED: Force ALL links to stay in WebView, never open external browser
+              return false;
+          }'''
+
+          if old in content:
+              content = content.replace(old, new)
+              with open(bridge_path, 'w') as f:
+                  f.write(content)
+              print("✅ Bridge.java patched successfully")
+          else:
+              print("❌ Could not find launchIntent method to patch")
+              import sys; sys.exit(1)
+          PYEOF
 
       - name: Set version
         run: |
           sed -i 's/versionCode 1/versionCode 31/' android/app/build.gradle
           sed -i 's/versionName "1.0"/versionName "1.0.31"/' android/app/build.gradle
 
-      - name: Replace icons
+      - name: Replace icons with cat icon
         run: |
           for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             cp www/icon-192.png android/app/src/main/res/mipmap-$dir/ic_launcher_foreground.png
@@ -43,8 +104,11 @@ jobs:
       - name: Sync
         run: npx cap sync android
 
-      - name: Build
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
