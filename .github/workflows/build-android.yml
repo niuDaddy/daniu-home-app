@@ -24,11 +24,8 @@ jobs:
 
       - name: Install
         run: |
-          npm install
+          npm ci
           npx cap add android
-
-      - name: Patch Bridge.java
-        run: chmod +x scripts/patch-bridge.sh && scripts/patch-bridge.sh
 
       - name: Replace icons
         run: |
