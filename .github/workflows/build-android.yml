@@ -27,6 +27,11 @@ jobs:
           npm ci
           npx cap add android
 
+      - name: Set version
+        run: |
+          sed -i 's/versionCode 1/versionCode 31/' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.31"/' android/app/build.gradle
+
       - name: Replace icons
         run: |
           for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
