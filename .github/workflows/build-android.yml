@@ -59,11 +59,23 @@ jobs:
       - name: Sync
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/daniu.keystore
+
+      - name: Sign APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          # Sign with fixed keystore
+          APK=$(find app/build/outputs/apk -name "*.apk" | head -1)
+          "$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/apksigner" sign \
+            --ks daniu.keystore \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            "$APK"
+          echo "✅ APK signed with fixed keystore"
 
       - uses: actions/upload-artifact@v4
         with:
