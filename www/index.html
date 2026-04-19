@@ -300,7 +300,12 @@ function checkUpdate() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data.latest) return;
-      var ack = localStorage.getItem(ACK_KEY) || '0';
+      var ack = localStorage.getItem(ACK_KEY);
+      // First launch: set ack to current version (don't show banner)
+      if (!ack) {
+        localStorage.setItem(ACK_KEY, data.latest);
+        return;
+      }
       if (data.latest > ack) {
         document.getElementById('updateVer').textContent = 'v' + data.latest;
         downloadUrl = data.apk_url || '';
