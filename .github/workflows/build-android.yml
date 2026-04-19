@@ -45,8 +45,8 @@ jobs:
 
       - name: Set version
         run: |
-          sed -i 's/versionCode 1/versionCode 31/' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.31"/' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 32/' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.32"/' android/app/build.gradle
 
       - name: Replace icons with cat icon
         run: |
