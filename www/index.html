@@ -77,36 +77,29 @@ a .tag.lock {
   font-size: 0.8em;
   color: #bbb;
 }
-/* Floating nav bar */
-.nav-bar {
+/* Floating refresh button (top-right, always visible) */
+.refresh-btn {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  gap: 12px;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(10px);
-  padding: 10px 20px;
-  border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  z-index: 1000;
-}
-.nav-bar.visible { display: flex; }
-.nav-btn {
-  width: 44px;
-  height: 44px;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
   border: none;
-  background: #f0f0f0;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
   border-radius: 50%;
-  font-size: 1.3em;
+  font-size: 1.2em;
   cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: transform 0.3s;
 }
-.nav-btn:active { transform: scale(0.9); background: #e0e0e0; }
+.refresh-btn:active { transform: rotate(180deg); }
+.refresh-btn.spinning { animation: spin 0.6s ease; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 /* Update banner */
 .update-banner {
   position: fixed;
@@ -234,6 +227,9 @@ a .tag.lock {
 <div class="footer">daniu.win · Family Portal · v1.0.28</div>
 </div>
 
+<!-- Floating refresh button (top-right, always visible) -->
+<button class="refresh-btn" id="refreshBtn" onclick="refreshPage()">🔄</button>
+
 <!-- Update banner -->
 <div class="update-banner" id="updateBanner">
   <span>🎉 新版本 <b id="updateVer"></b> 已发布</span>
@@ -243,46 +239,38 @@ a .tag.lock {
   </div>
 </div>
 
-<!-- Floating nav bar (back + refresh) -->
-<div class="nav-bar" id="navBar">
-  <button class="nav-btn" onclick="goHome()" title="回到首页">🏠</button>
-  <button class="nav-btn" onclick="goBack()" title="返回">◀</button>
-  <button class="nav-btn" onclick="refreshPage()" title="刷新">🔄</button>
-</div>
-
 <script>
-// === Navigation ===
-var HOME_URL = location.protocol + '//' + location.host;
-
-function isHomePage() {
-  return location.href === HOME_URL || location.href === HOME_URL + '/';
-}
-
-function updateNavBar() {
-  var bar = document.getElementById('navBar');
-  if (!isHomePage()) bar.classList.add('visible');
-  else bar.classList.remove('visible');
-}
-
-function goHome() {
-  window.location.href = HOME_URL;
-}
-
-function goBack() {
-  if (window.history.length > 1 && !isHomePage()) {
-    window.history.back();
-  } else {
-    goHome();
-  }
-}
-
+// === Refresh ===
 function refreshPage() {
-  location.reload();
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  setTimeout(function() { location.reload(); }, 300);
 }
 
-// Check nav state on load and on popstate
-window.addEventListener('popstate', updateNavBar);
-window.addEventListener('load', updateNavBar);
+// === Pull-to-refresh (touch gesture) ===
+var touchStartY = 0, pulling = false;
+document.addEventListener('touchstart', function(e) {
+  if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; }
+}, { passive: true });
+document.addEventListener('touchmove', function(e) {
+  if (!pulling) return;
+  if (e.touches[0].clientY - touchStartY > 80 && window.scrollY === 0) {
+    pulling = false;
+    refreshPage();
+  }
+}, { passive: true });
+document.addEventListener('touchend', function() { pulling = false; }, { passive: true });
+
+// === Android hardware back button ===
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    var App = window.Capacitor.Plugins.App;
+    App.addListener('backButton', function() {
+      if (window.history.length > 1) window.history.back();
+      else App.exitApp();
+    });
+  }
+});
 
 // === Intercept links to stay in WebView ===
 document.addEventListener('click', function(e) {
@@ -292,7 +280,6 @@ document.addEventListener('click', function(e) {
   if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
   e.preventDefault();
   window.location.href = href;
-  setTimeout(updateNavBar, 500);
 }, false);
 
 // === Splash screen ===
@@ -306,8 +293,7 @@ if (document.readyState === 'complete') { hideSplash(); }
 else { window.addEventListener('load', function() { setTimeout(hideSplash, 200); }); }
 
 // === Update check ===
-var downloadUrl = '';
-var ACK_KEY = 'daniu_ack_version';
+var downloadUrl = '', ACK_KEY = 'daniu_ack_version';
 
 function checkUpdate() {
   fetch('/version.json?t=' + Date.now())
@@ -322,24 +308,19 @@ function checkUpdate() {
         document.body.classList.add('has-update');
       }
     })
-    .catch(function() {}); // Silent fail if offline
+    .catch(function() {});
 }
 
-function downloadUpdate() {
-  if (downloadUrl) window.location.href = downloadUrl;
-}
+function downloadUpdate() { if (downloadUrl) window.location.href = downloadUrl; }
 
 function closeBanner() {
-  // Remember this version as acknowledged
   var ver = document.getElementById('updateVer').textContent.replace('v', '');
   localStorage.setItem(ACK_KEY, ver);
   document.getElementById('updateBanner').classList.remove('visible');
   document.body.classList.remove('has-update');
 }
 
-// Check update on load
 checkUpdate();
-
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
 </body>
