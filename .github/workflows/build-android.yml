@@ -43,11 +43,6 @@ jobs:
               exit(1)
           "
 
-      - name: Set version
-        run: |
-          sed -i 's/versionCode 1/versionCode 32/' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.32"/' android/app/build.gradle
-
       - name: Replace icons with cat icon
         run: |
           for dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -58,6 +53,17 @@ jobs:
 
       - name: Sync
         run: npx cap sync android
+
+      - name: Set version (must run AFTER cap sync to avoid overwrite)
+        run: |
+          VERSION_CODE=${{ github.run_number }}
+          VERSION_NAME="1.0.${VERSION_CODE}"
+          sed -i "s/versionCode 1/versionCode ${VERSION_CODE}/" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"${VERSION_NAME}\"/" android/app/build.gradle
+          # Update version in both source and synced assets
+          sed -i "s|v1.0.32|v${VERSION_NAME}|" www/index.html
+          sed -i "s|v1.0.32|v${VERSION_NAME}|" android/app/src/main/assets/public/index.html
+          echo "✅ Version: ${VERSION_NAME} (${VERSION_CODE})"
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/daniu.keystore
