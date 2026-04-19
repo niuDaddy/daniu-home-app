@@ -77,6 +77,73 @@ a .tag.lock {
   font-size: 0.8em;
   color: #bbb;
 }
+/* Floating nav bar */
+.nav-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 12px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  padding: 10px 20px;
+  border-radius: 50px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+.nav-bar.visible { display: flex; }
+.nav-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 50%;
+  font-size: 1.3em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.nav-btn:active { transform: scale(0.9); background: #e0e0e0; }
+/* Update banner */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 12px 16px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10000;
+  font-size: 0.9em;
+}
+.update-banner.visible { display: flex; }
+.update-banner .btn-update {
+  background: #fff;
+  color: #667eea;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+.update-banner .btn-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0 4px;
+}
+/* Top padding when banner is shown */
+.has-update { padding-top: 50px; }
 </style>
 </head>
 <body>
@@ -164,11 +231,60 @@ a .tag.lock {
 
   </div>
 
-  <div class="footer">daniu.win · Family Portal · v1.0.32</div>
+<div class="footer">daniu.win · Family Portal · v1.0.28</div>
 </div>
+
+<!-- Update banner -->
+<div class="update-banner" id="updateBanner">
+  <span>🎉 新版本 <b id="updateVer"></b> 已发布</span>
+  <div>
+    <button class="btn-update" onclick="downloadUpdate()">下载更新</button>
+    <button class="btn-close" onclick="closeBanner()">✕</button>
+  </div>
+</div>
+
+<!-- Floating nav bar (back + refresh) -->
+<div class="nav-bar" id="navBar">
+  <button class="nav-btn" onclick="goHome()" title="回到首页">🏠</button>
+  <button class="nav-btn" onclick="goBack()" title="返回">◀</button>
+  <button class="nav-btn" onclick="refreshPage()" title="刷新">🔄</button>
+</div>
+
 <script>
-// Intercept all link clicks and use window.location instead of native navigation
-// This keeps navigation within the Capacitor WebView
+// === Navigation ===
+var HOME_URL = location.protocol + '//' + location.host;
+
+function isHomePage() {
+  return location.href === HOME_URL || location.href === HOME_URL + '/';
+}
+
+function updateNavBar() {
+  var bar = document.getElementById('navBar');
+  if (!isHomePage()) bar.classList.add('visible');
+  else bar.classList.remove('visible');
+}
+
+function goHome() {
+  window.location.href = HOME_URL;
+}
+
+function goBack() {
+  if (window.history.length > 1 && !isHomePage()) {
+    window.history.back();
+  } else {
+    goHome();
+  }
+}
+
+function refreshPage() {
+  location.reload();
+}
+
+// Check nav state on load and on popstate
+window.addEventListener('popstate', updateNavBar);
+window.addEventListener('load', updateNavBar);
+
+// === Intercept links to stay in WebView ===
 document.addEventListener('click', function(e) {
   var link = e.target.closest('a');
   if (!link) return;
@@ -176,16 +292,55 @@ document.addEventListener('click', function(e) {
   if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
   e.preventDefault();
   window.location.href = href;
+  setTimeout(updateNavBar, 500);
 }, false);
-function hideSplash(){
-  var s=document.getElementById('splash');
-  if(!s)return;
-  s.style.opacity='0';
-  setTimeout(function(){s.remove()},600);
+
+// === Splash screen ===
+function hideSplash() {
+  var s = document.getElementById('splash');
+  if (!s) return;
+  s.style.opacity = '0';
+  setTimeout(function() { s.remove(); }, 600);
 }
-if(document.readyState==='complete'){hideSplash();}
-else{window.addEventListener('load',function(){setTimeout(hideSplash,200)});}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');
+if (document.readyState === 'complete') { hideSplash(); }
+else { window.addEventListener('load', function() { setTimeout(hideSplash, 200); }); }
+
+// === Update check ===
+var downloadUrl = '';
+var ACK_KEY = 'daniu_ack_version';
+
+function checkUpdate() {
+  fetch('/version.json?t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.latest) return;
+      var ack = localStorage.getItem(ACK_KEY) || '0';
+      if (data.latest > ack) {
+        document.getElementById('updateVer').textContent = 'v' + data.latest;
+        downloadUrl = data.apk_url || '';
+        document.getElementById('updateBanner').classList.add('visible');
+        document.body.classList.add('has-update');
+      }
+    })
+    .catch(function() {}); // Silent fail if offline
+}
+
+function downloadUpdate() {
+  if (downloadUrl) window.location.href = downloadUrl;
+}
+
+function closeBanner() {
+  // Remember this version as acknowledged
+  var ver = document.getElementById('updateVer').textContent.replace('v', '');
+  localStorage.setItem(ACK_KEY, ver);
+  document.getElementById('updateBanner').classList.remove('visible');
+  document.body.classList.remove('has-update');
+}
+
+// Check update on load
+checkUpdate();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
 </body>
 </html>

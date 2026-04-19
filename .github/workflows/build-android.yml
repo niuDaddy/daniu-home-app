@@ -60,9 +60,12 @@ jobs:
           VERSION_NAME="1.0.${VERSION_CODE}"
           sed -i "s/versionCode 1/versionCode ${VERSION_CODE}/" android/app/build.gradle
           sed -i "s/versionName \"1.0\"/versionName \"${VERSION_NAME}\"/" android/app/build.gradle
-          # Update version in both source and synced assets
-          sed -i "s|v1.0.32|v${VERSION_NAME}|" www/index.html
-          sed -i "s|v1.0.32|v${VERSION_NAME}|" android/app/src/main/assets/public/index.html
+          # Update version in footer (source + synced assets)
+          sed -i "s|v1\.0\.[0-9]*|v${VERSION_NAME}|" www/index.html
+          sed -i "s|v1\.0\.[0-9]*|v${VERSION_NAME}|" android/app/src/main/assets/public/index.html
+          # Update version.json (source + synced assets)
+          printf '{\n  "latest": "%s",\n  "build": %s,\n  "date": "%s",\n  "apk_url": "https://github.com/niuDaddy/daniu-home-app/actions/runs/%s"\n}\n' "$VERSION_NAME" "$VERSION_CODE" "$(date +%Y-%m-%d)" "${{ github.run_id }}" > www/version.json
+          cp www/version.json android/app/src/main/assets/public/version.json
           echo "✅ Version: ${VERSION_NAME} (${VERSION_CODE})"
 
       - name: Decode keystore
