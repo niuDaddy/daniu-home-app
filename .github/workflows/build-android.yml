@@ -118,3 +118,20 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync version.json to coupon-dashboard
+        run: |
+          # Clone coupon-dashboard (openclaw-config repo), update version.json, push
+          REPO_DIR=$(mktemp -d)
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/niuDaddy/openclaw-config.git "$REPO_DIR"
+          cd "$REPO_DIR"
+          # version.json goes in coupon-dashboard/static/
+          mkdir -p coupon-dashboard/static
+          cp ../www/version.json coupon-dashboard/static/version.json
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add coupon-dashboard/static/version.json
+          git diff --quiet --cached || git commit -m "chore: sync version.json from build ${{ github.run_number }}"
+          git push
+          echo "✅ version.json synced to coupon-dashboard"
+          rm -rf "$REPO_DIR"
