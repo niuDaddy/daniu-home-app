@@ -27,6 +27,8 @@ jobs:
       - name: Install
         run: |
           npm install
+          # Install geolocation plugin for "distance sort" feature
+          npm install @capacitor/geolocation@7.1.8
           npx cap add android
 
       - name: Patch Capacitor Bridge to keep all links in WebView
@@ -44,6 +46,16 @@ jobs:
               print('❌ Patch failed')
               exit(1)
           "
+
+      - name: Add location permissions to AndroidManifest
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if ! grep -q 'ACCESS_FINE_LOCATION' "$MANIFEST"; then
+            sed -i '/<uses-permission android:name="android.permission.INTERNET" \/>/a\    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />' "$MANIFEST"
+            echo '✅ AndroidManifest patched with location permissions'
+          else
+            echo 'ℹ️  Location permissions already present'
+          fi
 
       - name: Inject refresh button into all pages
         run: python3 scripts/inject-refresh.py

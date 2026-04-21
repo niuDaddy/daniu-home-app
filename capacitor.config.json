@@ -24,6 +24,9 @@
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 0
+    },
+    "Geolocation": {
+      "denyList": []
     }
   }
 }
