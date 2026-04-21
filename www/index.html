@@ -306,7 +306,11 @@ function checkUpdate() {
         localStorage.setItem(ACK_KEY, data.latest);
         return;
       }
-      if (data.latest > ack) {
+      // Numeric version comparison (1.0.34 > 1.0.9 correctly)
+      var sv = data.latest.split('.').map(Number);
+      var av = ack.split('.').map(Number);
+      var isNewer = sv[0]>av[0] || (sv[0]===av[0] && sv[1]>av[1]) || (sv[0]===av[0] && sv[1]===av[1] && sv[2]>av[2]);
+      if (isNewer) {
         document.getElementById('updateVer').textContent = 'v' + data.latest;
         downloadUrl = data.apk_url || '';
         document.getElementById('updateBanner').classList.add('visible');
@@ -316,7 +320,15 @@ function checkUpdate() {
     .catch(function() {});
 }
 
-function downloadUpdate() { if (downloadUrl) window.location.href = downloadUrl; }
+function downloadUpdate() {
+  if (!downloadUrl) return;
+  // Capacitor: use Browser plugin for external URLs
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+    window.Capacitor.Plugins.Browser.open({ url: downloadUrl });
+  } else {
+    window.open(downloadUrl, '_blank');
+  }
+}
 
 function closeBanner() {
   var ver = document.getElementById('updateVer').textContent.replace('v', '');
