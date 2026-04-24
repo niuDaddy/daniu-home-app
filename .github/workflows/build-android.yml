@@ -83,6 +83,9 @@ jobs:
           # Inject APP_VERSION variable for smart version check
           sed -i "s|var APP_VERSION = null;|var APP_VERSION = '${VERSION_NAME}';|" www/index.html
           sed -i "s|var APP_VERSION = null;|var APP_VERSION = '${VERSION_NAME}';|" android/app/src/main/assets/public/index.html
+          # Version service worker cache name to prevent stale cache on update
+          sed -i "s|daniu-home-v[0-9.]*|daniu-home-v${VERSION_NAME}|" www/sw.js
+          sed -i "s|daniu-home-v[0-9.]*|daniu-home-v${VERSION_NAME}|" android/app/src/main/assets/public/sw.js
           # Update version.json (source + synced assets)
           printf '{\n  "latest": "%s",\n  "build": %s,\n  "date": "%s",\n  "apk_url": "https://github.com/niuDaddy/daniu-home-app/releases/download/v%s/app-release-unsigned.apk"\n}\n' "$VERSION_NAME" "$VERSION_CODE" "$(date +%Y-%m-%d)" "$VERSION_NAME" > www/version.json
           cp www/version.json android/app/src/main/assets/public/version.json
