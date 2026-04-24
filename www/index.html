@@ -302,13 +302,18 @@ if (document.readyState === 'complete') { hideSplash(); }
 else { window.addEventListener('load', function() { setTimeout(hideSplash, 200); }); }
 
 // === Update check ===
-var downloadUrl = '', ACK_KEY = 'daniu_ack_version';
+var downloadUrl = '', ACK_KEY = 'daniu_ack_version', APP_VERSION = null;
 
 function checkUpdate() {
   fetch('/version.json?t=' + Date.now())
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data.latest) return;
+      // If APP_VERSION matches latest, this build IS the latest — no banner needed
+      if (APP_VERSION && data.latest === APP_VERSION) {
+        localStorage.setItem(ACK_KEY, data.latest);
+        return;
+      }
       var ack = localStorage.getItem(ACK_KEY);
       // First launch: set ack to current version (don't show banner)
       if (!ack) {
